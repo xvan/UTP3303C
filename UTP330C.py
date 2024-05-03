@@ -4,30 +4,29 @@ import glob
 import time
 from enum import Enum
 
-class UTP330C:
-    def __init__(self, port=None, timeout=0.05):
-        self.port = port
+
+class Usb_Instrument:
+    def __init__(self, idn, name, vid_pid, port=None, timeout=0.05):
         self.timeout = timeout
 
-        if self.port is None:
-            self.port = self._auto_detect()
+        if port is None:
+            port = self._auto_detect(vid_pid)
 
-        self.ser = serial.Serial(self.port, timeout=timeout)
+        self.ser = serial.Serial(port, timeout=timeout)
 
-        if b"P3303C%**" != self.IDN():
-            raise Exception("UTP330C not found on port: "+port)
+        if idn.encode("ascii") != self.IDN():
+            raise Exception(name + " not found on port: " + port)
 
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
     def close(self):
         self.ser.close()
 
-    def _auto_detect(self):
-        vid_pid = "5345:1234"
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def _auto_detect(self, vid_pid):
         devices = UTP330C.vidpid_to_devs(vid_pid)
         if len(devices) == 0: return None
         for device in devices:
@@ -63,6 +62,23 @@ class UTP330C:
                             ]
         return dev_names
 
+    def _read_command(self, cmd):
+        time.sleep(self.timeout)
+        self._write_command(cmd)
+        time.sleep(self.timeout)
+        return self.ser.readline()
+
+    def IDN(self):
+        return self._read_command('*IDN?')
+
+    def _write_command(self, cmd):
+        time.sleep(self.timeout)
+        return self.ser.write(cmd.encode("ascii"))
+
+
+class UTP330C(Usb_Instrument):
+    def __init__(self, *args, **kwargs):
+        super().__init__('P3303C%**', 'UTP330C', '5345:1234', *args, **kwargs)
     def VSET(self, channel, value):
         return self._write_command(f'VSET{channel}:{value}')
 
@@ -95,9 +111,6 @@ class UTP330C:
     def STATUS(self):
         return STATUS(self._read_command('STATUS?')[0])
 
-    def IDN(self):
-        return self._read_command('*IDN?')
-
     def RECALL(self, number):
         return self._write_command(f'RCL{number}')
 
@@ -124,16 +137,6 @@ class UTP330C:
 
     def OVPSTE(self, channel, value):
         return self._write_command(f'OVPSTE{channel}:{value}')
-
-    def _write_command(self, cmd):
-        time.sleep(self.timeout)
-        return self.ser.write(cmd.encode("ascii"))
-
-    def _read_command(self, cmd):
-        time.sleep(self.timeout)
-        self._write_command(cmd)
-        time.sleep(self.timeout)
-        return self.ser.readline()
 
     class TrackEnum(Enum):
         INDEPENDENT = 0
