@@ -15,7 +15,7 @@ class StaticTests(unittest.TestCase):
 class InstanceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.utp = UTP330C.UTP330C.AutoDetect()
+        cls.utp = UTP330C.UTP330C()
         if(cls.utp is None):
             raise Exception("No UTP330C found")
 
@@ -28,13 +28,13 @@ class InstanceTests(unittest.TestCase):
 
     def test_vset(self):
         self.utp.VSET(1, 4)
-        self.assertEqual(self.utp.VGET(1), 4)
+        self.assertEqual(4, self.utp.VGET(1))
         self.utp.VSET(1, 5)
-        self.assertEqual(self.utp.VGET(1), 5)
+        self.assertEqual(5, self.utp.VGET(1))
         self.utp.VSET(2, 4)
-        self.assertEqual(self.utp.VGET(2), 4)
+        self.assertEqual(4, self.utp.VGET(2))
         self.utp.VSET(2, 5)
-        self.assertEqual(self.utp.VGET(2), 5)
+        self.assertEqual(5, self.utp.VGET(2))
 
     def test_iget(self):
         self.utp.ISET(1, 0.1)
@@ -81,12 +81,12 @@ class InstanceTests(unittest.TestCase):
         self.utp.TRACK(UTP330C.UTP330C.TrackEnum.PARALLEL)
 
     def test_overprotections(self):
-        self.utp.OVP(True)
-        print(self.utp.getOVP())
-        self.utp.OVP(False)
-        print(self.utp.getOVP())
-        self.utp.OCP(True)
-        self.utp.OCP(False)
+        self.utp.Set_OVP(True)
+        print(self.utp.Get_OVP())
+        self.utp.Set_OVP(False)
+        print(self.utp.Get_OVP())
+        self.utp.Set_OCP(True)
+        self.utp.Set_OCP(False)
 
 if __name__ == '__main__':
     unittest.main()

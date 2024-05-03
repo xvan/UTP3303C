@@ -5,10 +5,14 @@ import time
 from enum import Enum
 
 class UTP330C:
-    def __init__(self, port, timeout=0.02):
+    def __init__(self, port=None, timeout=0.05):
         self.port = port
         self.timeout = timeout
-        self.ser = serial.Serial(port, timeout=timeout)
+
+        if self.port is None:
+            self.port = self._auto_detect()
+
+        self.ser = serial.Serial(self.port, timeout=timeout)
 
         if b"P3303C%**" != self.IDN():
             raise Exception("UTP330C not found on port: "+port)
@@ -22,14 +26,13 @@ class UTP330C:
     def close(self):
         self.ser.close()
 
-    @staticmethod
-    def AutoDetect():
+    def _auto_detect(self):
         vid_pid = "5345:1234"
         devices = UTP330C.vidpid_to_devs(vid_pid)
         if len(devices) == 0: return None
         for device in devices:
             try:
-                return UTP330C(device)
+                return device
             except:
                 pass
         return None
