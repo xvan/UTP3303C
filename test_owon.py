@@ -4,7 +4,8 @@ from array import array
 import matplotlib.pyplot as plt
 import numpy as np
 
-from owon import ResponseStartLength, OwonOsciloscope, ResponseBin, ResponseBinWithHeader, Compensator
+from owon import ResponseStartLength, OwonOsciloscope, ResponseBin, ResponseBinWithHeader
+from compensator import Compensator
 
 
 class OwonTestCase(unittest.TestCase):

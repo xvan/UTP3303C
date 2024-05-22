@@ -16,12 +16,12 @@ with UTP330C() as src, HMC8012() as mult, OwonOsciloscope() as owon, Bms() as bm
 
     src.OUT(True)
 
-    with open(f'all_calibration8a16.csv', 'w') as f:
+    with open(f'all_calibration8a16_vpow.csv', 'w') as f:
         for v_src in [ x/100 for x in  range(800, 1600)]:
             src.VSET(1, v_src)
             time.sleep(2)
             v_meas = float(mult.read().decode("ascii"))
-            v_ch1, v_ch2 = owon.calc_mean_without_compensation()
+            v_ch1, v_ch2 = owon.calc_mean()
             v_up, v_down, i = bms.read_adc()
 
             data = f'{v_src:.3f}, {v_meas:.3f}, {v_ch1:.3f}, {v_ch2:.3f}, {v_up:.3f}, {v_down:.3f}'

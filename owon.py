@@ -3,8 +3,9 @@ import struct
 from dataclasses import dataclass
 from enum import Enum
 
-import numpy
 import usb
+
+from compensator import Compensator
 
 chVv = {
         0: 0.002,
@@ -216,13 +217,6 @@ class ResponseBinWithHeader(ResponseBin):
         self.file_length = int.from_bytes(stream.read(4), byteorder='little', signed=True)
         super().__init__(data[10:], machine_model)
 
-
-class Compensator:
-    def __init__(self, file):
-        self.table = numpy.loadtxt(file, delimiter=',', skiprows=1)
-
-    def compensate(self, meas):
-        return numpy.interp(meas, self.table[:, 0], self.table[:, 1])
 
 class OwonOsciloscope:
     def __init__(self):

@@ -3,12 +3,18 @@ import os
 import glob
 import time
 from enum import Enum
-
+from compensator import Compensator
 
 class Bms:
     def __init__(self, port=None, timeout=0.5):
         self.timeout = timeout
         self.suffix = "\n"
+        self.compensator = {
+            "VBAT": Compensator("VBAT_calibration.csv"),
+            "VPOW": Compensator("VPOW_calibration.csv"),
+            "IBAT": Compensator("IBAT_calibration.csv")
+        }
+
         if port is None:
             port = self._auto_detect("0483:5740")
 
@@ -70,6 +76,12 @@ class Bms:
         time.sleep(self.timeout)
         return self.ser.write((cmd+self.suffix).encode("ascii"))
 
-    def read_adc(self):
+    def read_adc_without_compensation(self):
         line = self._read_command("read_adc").decode("ascii")
         return [float(field.split("=")[-1]) for field in line.split(" ")]
+
+    def read_adc(self):
+        uncomp = self.read_adc_without_compensation()
+        return [self.compensator["VBAT"].compensate(uncomp[0]),
+                self.compensator["VPOW"].compensate(uncomp[1]),
+                self.compensator["IBAT"].compensate(uncomp[2])]

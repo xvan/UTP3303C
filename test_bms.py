@@ -18,8 +18,8 @@ class InstanceTests(unittest.TestCase):
         self.assertIsNotNone(self.utp)
 
     def test_hello(self):
-        for _ in range(5):
-            print(self.utp.read_adc())
+        for _ in range(4):
+            print(self.utp.read_adc_without_compensation())
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,13 +20,18 @@ class InstanceTests(unittest.TestCase):
     def test_many(self):
         self.utp.reset()
         self.utp.clear_status()
+        self.utp.conf_current_dc_mode()
         print("ESR:", self.utp.get_esr())
         print(self.utp.get_status_byte())
-        print(self.utp.fetch())
-        print(self.utp.read())
+        print("FETCH:", self.utp.fetch())
+        print("READ:", self.utp.read())
         self.utp.beep()
         print(self.utp.get_error())
         self.utp.display("Hello, Rey!")
+
+    def test_set_current(self):
+        print(self.utp.conf_current_dc_mode())
+        print(self.utp.conf_current_dc_mode())
 
 
 

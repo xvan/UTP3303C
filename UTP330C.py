@@ -110,6 +110,11 @@ class HMC8012(UsbInstrument):
     def clear_display(self):
         return self._write_command('DISP:TEXT:CLEAR')
 
+    def conf_current_dc_mode(self):
+        self._write_command('MEAS:CURR:DC?')
+        time.sleep(2)
+
+
 
 class UTP330C(UsbInstrument):
     def __init__(self, *args, **kwargs):
