@@ -75,6 +75,15 @@ class InstanceTests(unittest.TestCase):
         self.assertEqual(self.utp.IOUT(2), 0.0)
         self.assertEqual(self.utp.STATUS().output, UTP330C.STATUS.OutputStatus.OFF)
 
+    def test_hi(self):
+        self.utp.ISET(1, 0.1)
+
+        self.utp.OUT(True)
+        for x in range (800, 1600):
+            self.utp.VSET(1, x / 100)
+            time.sleep(1)
+        self.utp.OUT(False)
+
     def test_tracks(self):
         self.utp.TRACK(UTP330C.UTP330C.TrackEnum.INDEPENDENT)
         self.utp.TRACK(UTP330C.UTP330C.TrackEnum.SERIES)

@@ -5,10 +5,10 @@ import time
 from enum import Enum
 
 
-class Usb_Instrument:
-    def __init__(self, idn, name, vid_pid, port=None, timeout=0.05):
+class UsbInstrument:
+    def __init__(self, idn, name, vid_pid, suffix, port=None, timeout=0.05):
         self.timeout = timeout
-
+        self.suffix = suffix
         if port is None:
             port = self._auto_detect(vid_pid)
 
@@ -27,7 +27,7 @@ class Usb_Instrument:
         self.close()
 
     def _auto_detect(self, vid_pid):
-        devices = UTP330C.vidpid_to_devs(vid_pid)
+        devices = UsbInstrument.vidpid_to_devs(vid_pid)
         if len(devices) == 0: return None
         for device in devices:
             try:
@@ -66,19 +66,54 @@ class Usb_Instrument:
         time.sleep(self.timeout)
         self._write_command(cmd)
         time.sleep(self.timeout)
-        return self.ser.readline()
+        return self.ser.readline().strip()
 
     def IDN(self):
         return self._read_command('*IDN?')
 
     def _write_command(self, cmd):
         time.sleep(self.timeout)
-        return self.ser.write(cmd.encode("ascii"))
+        return self.ser.write((cmd+self.suffix).encode("ascii"))
 
 
-class UTP330C(Usb_Instrument):
+class HMC8012(UsbInstrument):
     def __init__(self, *args, **kwargs):
-        super().__init__('P3303C%**', 'UTP330C', '5345:1234', *args, **kwargs)
+        super().__init__('Rohde&Schwarz,HMC8012,037154190,01.400', 'HMC8012', '0aad:0135', '\n', *args, **kwargs)
+
+    def clear_status(self):
+        return self._write_command('*CLS')
+
+    def get_esr(self):
+        return self._read_command('*ESR?')
+
+    def reset(self):
+        self._write_command('*RST')
+        time.sleep(3) #wait for restart
+
+    def get_status_byte(self):
+        return self._read_command('*STB?')
+
+    def fetch(self):
+        return self._read_command('FETC?')
+    def read(self):
+        return self._read_command('READ?')
+
+    def beep(self):
+        return self._write_command('SYST:BEEP')
+
+    def get_error(self):
+        return self._read_command('SYST:ERR?')
+
+    def display(self, param):
+        return self._write_command(f'DISP:TEXT "{param}"')
+
+    def clear_display(self):
+        return self._write_command('DISP:TEXT:CLEAR')
+
+
+class UTP330C(UsbInstrument):
+    def __init__(self, *args, **kwargs):
+        super().__init__('P3303C%**', 'UTP330C', '5345:1234', '', *args, **kwargs)
     def VSET(self, channel, value):
         return self._write_command(f'VSET{channel}:{value}')
 
