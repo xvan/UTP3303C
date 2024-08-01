@@ -12,7 +12,11 @@ class Bms:
         self.compensator = {
             "VBAT": Compensator("VBAT_calibration.csv"),
             "VPOW": Compensator("VPOW_calibration.csv"),
-            "IBAT": Compensator("IBAT_calibration.csv")
+            "IBAT": Compensator("IBAT_calibration.csv"),
+            "SLVA_CH1": Compensator("SLVA_CH1_calibration.csv"),
+            "SLVB_CH1": Compensator("SLVB_CH1_calibration.csv"),
+            "SLVA_CH2": Compensator("SLVA_CH2_calibration.csv"),
+            "SLVB_CH2": Compensator("SLVB_CH2_calibration.csv")
         }
 
         if port is None:
@@ -72,6 +76,13 @@ class Bms:
         self.ser.readline().strip()
         return self.ser.readline().strip()
 
+    def _read_command2(self, cmd):
+        time.sleep(self.timeout)
+        self._write_command(cmd)
+        time.sleep(self.timeout)
+        self.ser.readline().strip()
+        return [ self.ser.readline().strip(), self.ser.readline().strip() ]
+
     def _write_command(self, cmd):
         time.sleep(self.timeout)
         return self.ser.write((cmd+self.suffix).encode("ascii"))
@@ -80,8 +91,46 @@ class Bms:
         line = self._read_command("read_adc").decode("ascii")
         return [float(field.split("=")[-1]) for field in line.split(" ")]
 
+    #fixme: unificar con write_command
+    def _execute_command(self, cmd: str):
+        retval = self._write_command(cmd)
+        time.sleep(self.timeout)
+        print( self.ser.readline().strip())
+        return retval
+
+    class SwitchTypeEnum(Enum):
+        Charge = 0
+        Discharge = 1
+        Off = 1
+    def switch(self, state : SwitchTypeEnum):
+        if state == Bms.SwitchTypeEnum.Charge:
+            self._read_command("switch charge")
+        elif state == Bms.SwitchTypeEnum.Discharge:
+            self._read_command("switch discharge")
+        elif state == Bms.SwitchTypeEnum.Off:
+            self._read_command("switch off")
+        else:
+            raise ValueError("Invalid state")
+
+
+
     def read_adc(self):
         uncomp = self.read_adc_without_compensation()
         return [self.compensator["VBAT"].compensate(uncomp[0]),
                 self.compensator["VPOW"].compensate(uncomp[1]),
                 self.compensator["IBAT"].compensate(uncomp[2])]
+
+    def read_slave_without_compensation(self):
+        result = []
+        for line in self._read_command2("read_slave 1"):
+            dec_line = line.decode("ascii")
+            voltages =  dec_line.split(",")[2:4]
+            result.append([ float(voltage.split(":")[-1].strip()) for voltage in voltages])
+        return result
+
+    def read_slave(self):
+        [[slvA_ch1, slvA_ch2], [slvB_ch1, slvB_ch2]] = self.read_slave_without_compensation()
+        return [[self.compensator["SLVA_CH1"].compensate(slvA_ch1),
+                self.compensator["SLVA_CH2"].compensate(slvA_ch2)],
+                [self.compensator["SLVB_CH1"].compensate(slvB_ch1),
+                self.compensator["SLVB_CH2"].compensate(slvB_ch2)]]

@@ -16,7 +16,7 @@ with UTP330C() as src, HMC8012() as mult, OwonOsciloscope() as owon, Bms() as bm
 
     src.OUT(True)
 
-    with open(f'all_calibration8a16_vpow.csv', 'w') as f:
+    with open(f'all_calibration8a16_4vpow.csv', 'w') as f:
         for v_src in [ x/100 for x in  range(800, 1600)]:
             src.VSET(1, v_src)
             time.sleep(2)

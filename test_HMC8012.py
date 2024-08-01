@@ -33,6 +33,11 @@ class InstanceTests(unittest.TestCase):
         print(self.utp.conf_current_dc_mode())
         print(self.utp.conf_current_dc_mode())
 
+    def test_current_meas(self):
+        self.utp.reset()
+        self.utp.clear_status()
+        self.utp.conf_current_dc_mode()
+        print(self.utp.read())
 
 
 if __name__ == '__main__':
