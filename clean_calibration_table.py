@@ -87,8 +87,10 @@ def save_header(dataframe_xspaced: pd.DataFrame, step: float, filename: str):
 # clean_data(table, 'v_meas_ch2', 'slA_ch2', 'SLVA_CH2_calibration')
 # clean_data(table, 'v_meas_ch2', 'slB_ch2', 'SLVB_CH2_calibration')
 
-charge = pd.read_csv('raw_bms_charge_cal_old.csv').iloc[1:, :][::-1]
-discharge = pd.read_csv('raw_bms_discharge_cal_old.csv')
+charge = pd.read_csv('raw_bms_charge_cal.csv').iloc[1:, :][::-1]
+charge["i_meas"] = -1* charge["i_meas"]
+discharge = pd.read_csv('raw_bms_discharge_cal.csv')
+discharge["i_meas"] = -1* discharge["i_meas"]
 table = pd.concat([charge, discharge], ignore_index=True)
 current_table = table
 clean_data(table, 'i_meas', 'v_current', 'MST_CURR_calibration', step=1, decimals=0)
